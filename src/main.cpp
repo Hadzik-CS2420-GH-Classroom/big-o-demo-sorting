@@ -141,6 +141,31 @@ void merge_sort(std::vector<int>& data) {
     merge_sort_recursive(data, 0, static_cast<int>(data.size()) - 1);
 }
 
+// Heap Sort (helper: heapify_down)
+// - Time: O(n log n) in all cases
+// - Space: O(1) — in-place, the heap IS the array
+void heapify_down(std::vector<int>& data, int heap_size, int index) {
+    int largest = index;
+    int left = 2 * index + 1;
+    int right = 2 * index + 2;
+    if (left < heap_size && data[left] > data[largest]) largest = left;
+    if (right < heap_size && data[right] > data[largest]) largest = right;
+    if (largest != index) {
+        std::swap(data[index], data[largest]);
+        heapify_down(data, heap_size, largest);
+    }
+}
+
+void heap_sort(std::vector<int>& data) {
+    int n = static_cast<int>(data.size());
+    if (n <= 1) return;
+    for (int i = n / 2 - 1; i >= 0; --i) heapify_down(data, n, i);
+    for (int i = n - 1; i > 0; --i) {
+        std::swap(data[0], data[i]);
+        heapify_down(data, i, 0);
+    }
+}
+
 // Quick Sort
 // - Time: O(n log n) average, O(n^2) worst case (rare with good pivot)
 // - Space: O(log n) — recursive call stack depth
@@ -221,6 +246,7 @@ int main() {
         {"Selection Sort", "O(n^2)",     selection_sort},
         {"Merge Sort",     "O(n log n)", merge_sort},
         {"Quick Sort",     "O(n log n)", quick_sort},
+        {"Heap Sort",      "O(n log n)", heap_sort},
     };
 
     // Store results for summary table: results[algo_index][size_index]

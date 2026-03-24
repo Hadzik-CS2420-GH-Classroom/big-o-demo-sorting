@@ -84,6 +84,7 @@ COLORS = {
     "Selection Sort": "#d97706",  # amber
     "Merge Sort":     "#16a34a",  # green
     "Quick Sort":     "#2563eb",  # blue
+    "Heap Sort":      "#7c3aed",  # purple
 }
 
 
