@@ -1,12 +1,13 @@
 // =============================================================================
 // Big O Demo: Sorting Algorithms
 // =============================================================================
-// Compares O(n^2) vs O(n log n) sorting algorithms to show the dramatic
-// performance difference as input size grows.
+// Compares O(n^2) vs O(n log n) vs O(n+k) sorting algorithms to show the
+// dramatic performance difference as input size grows.
 //
 // Key takeaway:
 // - O(n^2) algorithms: when n doubles, runtime grows ~4x
 // - O(n log n) algorithms: when n doubles, runtime grows ~2x
+// - O(n+k) algorithms: when n doubles, runtime grows ~2x (linear in n)
 // =============================================================================
 
 #include <algorithm>
@@ -141,31 +142,6 @@ void merge_sort(std::vector<int>& data) {
     merge_sort_recursive(data, 0, static_cast<int>(data.size()) - 1);
 }
 
-// Heap Sort (helper: heapify_down)
-// - Time: O(n log n) in all cases
-// - Space: O(1) — in-place, the heap IS the array
-void heapify_down(std::vector<int>& data, int heap_size, int index) {
-    int largest = index;
-    int left = 2 * index + 1;
-    int right = 2 * index + 2;
-    if (left < heap_size && data[left] > data[largest]) largest = left;
-    if (right < heap_size && data[right] > data[largest]) largest = right;
-    if (largest != index) {
-        std::swap(data[index], data[largest]);
-        heapify_down(data, heap_size, largest);
-    }
-}
-
-void heap_sort(std::vector<int>& data) {
-    int n = static_cast<int>(data.size());
-    if (n <= 1) return;
-    for (int i = n / 2 - 1; i >= 0; --i) heapify_down(data, n, i);
-    for (int i = n - 1; i > 0; --i) {
-        std::swap(data[0], data[i]);
-        heapify_down(data, i, 0);
-    }
-}
-
 // Quick Sort
 // - Time: O(n log n) average, O(n^2) worst case (rare with good pivot)
 // - Space: O(log n) — recursive call stack depth
@@ -198,6 +174,84 @@ void quick_sort_recursive(std::vector<int>& data, int low, int high) {
 void quick_sort(std::vector<int>& data) {
     if (data.size() <= 1) return;
     quick_sort_recursive(data, 0, static_cast<int>(data.size()) - 1);
+}
+
+// -----------------------------------------------------------------------------
+// O(n+k) Sorting Algorithms (non-comparison / bucket sorts)
+// -----------------------------------------------------------------------------
+
+// Counting Sort
+// - Time: O(n + k) where k is the range of input values
+// - Space: O(k) for the count array
+void counting_sort(std::vector<int>& data) {
+    if (data.size() <= 1) return;
+    int min_val = *std::min_element(data.begin(), data.end());
+    int max_val = *std::max_element(data.begin(), data.end());
+    int range = max_val - min_val + 1;
+
+    std::vector<int> count(range, 0);
+    for (int val : data) {
+        count[val - min_val]++;
+    }
+
+    int idx = 0;
+    for (int i = 0; i < range; ++i) {
+        while (count[i] > 0) {
+            data[idx++] = i + min_val;
+            --count[i];
+        }
+    }
+}
+
+// Bucket Sort
+// - Time: O(n + k) average when data is uniformly distributed
+// - Space: O(n + k) for the buckets
+void bucket_sort(std::vector<int>& data, int num_buckets = 10) {
+    if (data.size() <= 1) return;
+    int min_val = *std::min_element(data.begin(), data.end());
+    int max_val = *std::max_element(data.begin(), data.end());
+    double range = static_cast<double>(max_val - min_val + 1);
+
+    std::vector<std::vector<int>> buckets(num_buckets);
+    for (int val : data) {
+        int b = static_cast<int>((val - min_val) / range * num_buckets);
+        if (b == num_buckets) --b;
+        buckets[b].push_back(val);
+    }
+
+    int idx = 0;
+    for (auto& bucket : buckets) {
+        std::sort(bucket.begin(), bucket.end());
+        for (int val : bucket) {
+            data[idx++] = val;
+        }
+    }
+}
+
+// Radix Sort (LSD)
+// - Time: O(d * (n + 10)) where d = number of digits
+// - Space: O(n + 10)
+void radix_sort(std::vector<int>& data) {
+    if (data.size() <= 1) return;
+    int max_val = *std::max_element(data.begin(), data.end());
+    int n = static_cast<int>(data.size());
+    std::vector<int> output(n);
+
+    for (int exp = 1; max_val / exp > 0; exp *= 10) {
+        std::vector<int> count(10, 0);
+        for (int val : data) {
+            count[(val / exp) % 10]++;
+        }
+        for (int i = 1; i < 10; ++i) {
+            count[i] += count[i - 1];
+        }
+        for (int i = n - 1; i >= 0; --i) {
+            int digit = (data[i] / exp) % 10;
+            output[count[digit] - 1] = data[i];
+            count[digit]--;
+        }
+        data = output;
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -246,7 +300,9 @@ int main() {
         {"Selection Sort", "O(n^2)",     selection_sort},
         {"Merge Sort",     "O(n log n)", merge_sort},
         {"Quick Sort",     "O(n log n)", quick_sort},
-        {"Heap Sort",      "O(n log n)", heap_sort},
+        {"Counting Sort",  "O(n+k)",     counting_sort},
+        {"Bucket Sort",    "O(n+k)",     [](std::vector<int>& d) { bucket_sort(d); }},
+        {"Radix Sort",     "O(d(n+k))",  radix_sort},
     };
 
     // Store results for summary table: results[algo_index][size_index]
@@ -255,7 +311,7 @@ int main() {
 
     std::cout << "=============================================================\n";
     std::cout << " Big O Demo: Sorting Algorithms\n";
-    std::cout << " Comparing O(n^2) vs O(n log n)\n";
+    std::cout << " Comparing O(n^2) vs O(n log n) vs O(n+k)\n";
     std::cout << "=============================================================\n";
 
     // Pre-generate test data for each size (same data for all algorithms)
@@ -305,6 +361,7 @@ int main() {
     std::cout << " Key Lesson:\n";
     std::cout << "   O(n^2):      when n doubles, time grows ~4x\n";
     std::cout << "   O(n log n):  when n doubles, time grows ~2x\n";
+    std::cout << "   O(n+k):      when n doubles, time grows ~2x (linear)\n";
     std::cout << "-------------------------------------------------------------\n";
 
     // Write CSV and generate charts

@@ -84,33 +84,64 @@ COLORS = {
     "Selection Sort": "#d97706",  # amber
     "Merge Sort":     "#16a34a",  # green
     "Quick Sort":     "#2563eb",  # blue
-    "Heap Sort":      "#7c3aed",  # purple
+    "Counting Sort":  "#7c3aed",  # violet
+    "Bucket Sort":    "#c026d3",  # fuchsia
+    "Radix Sort":     "#0891b2",  # cyan
 }
+
+
+LEGEND_GROUPS = [
+    {
+        "group": "quadratic",
+        "title": "O(n²) Quadratic",
+        "algos": ["Bubble Sort", "Insertion Sort", "Selection Sort"],
+    },
+    {
+        "group": "efficient",
+        "title": "O(n log n) Efficient",
+        "algos": ["Merge Sort", "Quick Sort"],
+    },
+    {
+        "group": "non-comparison",
+        "title": "O(n+k) Non-Comparison",
+        "algos": ["Counting Sort", "Bucket Sort", "Radix Sort"],
+    },
+]
 
 
 def build_chart(algorithms):
     fig = go.Figure()
 
-    for name, data in algorithms.items():
-        fig.add_trace(go.Scatter(
-            x=data["n"],
-            y=data["time"],
-            mode="lines+markers",
-            name=f"{name} -- {data['complexity']}",
-            line=dict(color=COLORS.get(name, "#3b82f6"), width=3),
-            marker=dict(size=10),
-        ))
+    for grp in LEGEND_GROUPS:
+        for name in grp["algos"]:
+            if name not in algorithms:
+                continue
+            data = algorithms[name]
+            fig.add_trace(go.Scatter(
+                x=data["n"],
+                y=data["time"],
+                mode="lines+markers",
+                name=name,
+                legendgroup=grp["group"],
+                legendgrouptitle=dict(text=grp["title"], font=dict(size=13, color="#555")),
+                line=dict(color=COLORS.get(name, "#3b82f6"), width=3),
+                marker=dict(size=10),
+            ))
 
     fig.update_layout(
-        title=dict(text="Sorting Algorithms: O(n^2) vs O(n log n)", font=dict(size=22)),
+        title=dict(text="Sorting Algorithms: O(n²) vs O(n log n) vs O(n+k)", font=dict(size=22)),
         xaxis_title="n (input size)",
         yaxis_title="Time (microseconds)",
         yaxis=dict(rangemode="tozero"),
         template="plotly_white",
         font=dict(size=14),
-        legend=dict(font=dict(size=14)),
+        legend=dict(
+            font=dict(size=13),
+            groupclick="togglegroup",
+            tracegroupgap=12,
+        ),
         margin=dict(t=60, b=60),
-        height=550,
+        height=600,
     )
     return fig
 
@@ -134,7 +165,7 @@ def generate_html(algorithms):
 </head>
 <body>
 <h1>Big O Demo: Sorting Algorithms</h1>
-<p class="sub">O(n^2) vs O(n log n) -- timing comparison</p>
+<p class="sub">O(n²) vs O(n log n) vs O(n+k) -- timing comparison</p>
 <div class="chart">{chart_div}</div>
 </body>
 </html>"""
