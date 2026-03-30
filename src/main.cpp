@@ -176,6 +176,33 @@ void quick_sort(std::vector<int>& data) {
     quick_sort_recursive(data, 0, static_cast<int>(data.size()) - 1);
 }
 
+// Heap Sort
+// - Time: O(n log n) in all cases
+// - Space: O(1) — in-place, uses array as implicit heap
+void heapify_down(std::vector<int>& data, int heap_size, int index) {
+    int largest = index;
+    int left = 2 * index + 1;
+    int right = 2 * index + 2;
+    if (left < heap_size && data[left] > data[largest]) largest = left;
+    if (right < heap_size && data[right] > data[largest]) largest = right;
+    if (largest != index) {
+        std::swap(data[index], data[largest]);
+        heapify_down(data, heap_size, largest);
+    }
+}
+
+void heap_sort(std::vector<int>& data) {
+    int n = static_cast<int>(data.size());
+    // Phase 1: build max-heap
+    for (int i = n / 2 - 1; i >= 0; --i)
+        heapify_down(data, n, i);
+    // Phase 2: extract max repeatedly
+    for (int i = n - 1; i > 0; --i) {
+        std::swap(data[0], data[i]);
+        heapify_down(data, i, 0);
+    }
+}
+
 // -----------------------------------------------------------------------------
 // O(n+k) Sorting Algorithms (non-comparison / bucket sorts)
 // -----------------------------------------------------------------------------
@@ -300,6 +327,7 @@ int main() {
         {"Selection Sort", "O(n^2)",     selection_sort},
         {"Merge Sort",     "O(n log n)", merge_sort},
         {"Quick Sort",     "O(n log n)", quick_sort},
+        {"Heap Sort",      "O(n log n)", heap_sort},
         {"Counting Sort",  "O(n+k)",     counting_sort},
         {"Bucket Sort",    "O(n+k)",     [](std::vector<int>& d) { bucket_sort(d); }},
         {"Radix Sort",     "O(d(n+k))",  radix_sort},

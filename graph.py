@@ -84,6 +84,7 @@ COLORS = {
     "Selection Sort": "#d97706",  # amber
     "Merge Sort":     "#16a34a",  # green
     "Quick Sort":     "#2563eb",  # blue
+    "Heap Sort":      "#059669",  # emerald
     "Counting Sort":  "#7c3aed",  # violet
     "Bucket Sort":    "#c026d3",  # fuchsia
     "Radix Sort":     "#0891b2",  # cyan
@@ -99,7 +100,7 @@ LEGEND_GROUPS = [
     {
         "group": "efficient",
         "title": "O(n log n) Efficient",
-        "algos": ["Merge Sort", "Quick Sort"],
+        "algos": ["Merge Sort", "Quick Sort", "Heap Sort"],
     },
     {
         "group": "non-comparison",

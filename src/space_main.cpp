@@ -160,6 +160,28 @@ void quick_sort(std::vector<int>& data) {
     quick_sort_recursive(data, 0, static_cast<int>(data.size()) - 1);
 }
 
+void heapify_down(std::vector<int>& data, int heap_size, int index) {
+    int largest = index;
+    int left = 2 * index + 1;
+    int right = 2 * index + 2;
+    if (left < heap_size && data[left] > data[largest]) largest = left;
+    if (right < heap_size && data[right] > data[largest]) largest = right;
+    if (largest != index) {
+        std::swap(data[index], data[largest]);
+        heapify_down(data, heap_size, largest);
+    }
+}
+
+void heap_sort(std::vector<int>& data) {
+    int n = static_cast<int>(data.size());
+    for (int i = n / 2 - 1; i >= 0; --i)
+        heapify_down(data, n, i);
+    for (int i = n - 1; i > 0; --i) {
+        std::swap(data[0], data[i]);
+        heapify_down(data, i, 0);
+    }
+}
+
 // -----------------------------------------------------------------------------
 // O(n+k) Sorting Algorithms -- O(k) to O(n+k) auxiliary
 // -----------------------------------------------------------------------------
@@ -279,6 +301,7 @@ int main() {
         {"Selection Sort", "O(1)",   selection_sort},
         {"Merge Sort",     "O(n)",   merge_sort},
         {"Quick Sort",     "O(log n)", quick_sort},
+        {"Heap Sort",      "O(1)",   heap_sort},
         {"Counting Sort",  "O(k)",   counting_sort},
         {"Bucket Sort",    "O(n+k)", [](std::vector<int>& d) { bucket_sort(d); }},
         {"Radix Sort",     "O(n)",   radix_sort},
@@ -356,7 +379,54 @@ int main() {
         }
     }
     csv.close();
-    std::cout << "\n  Results written to CSV -- generating charts...\n";
+
+    // -------------------------------------------------------------------------
+    // Growth benchmark: larger sizes for O(n) sorts only
+    // -------------------------------------------------------------------------
+    std::cout << "\n=============================================================\n";
+    std::cout << " Growth Benchmark: O(n) sorts at larger sizes\n";
+    std::cout << "=============================================================\n";
+
+    const std::vector<int> big_sizes = {10000, 50000, 100000, 250000, 500000};
+
+    struct GrowthAlgorithm {
+        std::string name;
+        std::string space_complexity;
+        std::function<void(std::vector<int>&)> sort_fn;
+    };
+
+    std::vector<GrowthAlgorithm> growth_algos = {
+        {"Heap Sort",     "O(1)",   heap_sort},
+        {"Merge Sort",    "O(n)",   merge_sort},
+        {"Bucket Sort",   "O(n+k)", [](std::vector<int>& d) { bucket_sort(d); }},
+        {"Counting Sort", "O(k)",   counting_sort},
+    };
+
+    // Pre-generate big test data
+    std::vector<std::vector<int>> big_data;
+    for (int size : big_sizes) {
+        big_data.push_back(generate_random_data(size));
+    }
+
+    print_header();
+    std::string growth_csv_path = repo_dir + "/results_space_growth.csv";
+    std::ofstream growth_csv(growth_csv_path);
+    growth_csv << "structure,complexity,n,bytes\n";
+
+    for (size_t a = 0; a < growth_algos.size(); ++a) {
+        for (size_t s = 0; s < big_sizes.size(); ++s) {
+            size_t aux = measure_auxiliary(growth_algos[a].sort_fn, big_data[s]);
+            print_row(growth_algos[a].name, growth_algos[a].space_complexity,
+                      big_sizes[s], aux);
+            growth_csv << growth_algos[a].name << ","
+                       << growth_algos[a].space_complexity << ","
+                       << big_sizes[s] << "," << aux << "\n";
+        }
+        std::cout << "\n";
+    }
+    growth_csv.close();
+
+    std::cout << "  Results written to CSV -- generating charts...\n";
 
     std::string cmd = "py -3 \"" + repo_dir + "/graph_space.py\" --graph-only";
     std::system(cmd.c_str());
