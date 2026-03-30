@@ -173,16 +173,17 @@ def build_bar_chart(algorithms, target_n):
                 font=dict(size=13, color="#666"),
             ),
         ),
+        xaxis=dict(tickangle=-35),
         yaxis_title="Extra bytes allocated",
         yaxis=dict(rangemode="tozero"),
         template="plotly_white",
         font=dict(size=13),
-        margin=dict(t=60, b=80),
-        height=450,
+        margin=dict(t=60, b=130),
+        height=520,
         showlegend=False,
     )
 
-    # Add category bracket annotations
+    # Add category bracket annotations below the rotated tick labels
     brackets = [
         (0, 2, "O(1) In-Place", "#c62828"),
         (3, 5, "O(n log n) Efficient", "#1b5e20"),
@@ -191,10 +192,10 @@ def build_bar_chart(algorithms, target_n):
     for start, end, label, color in brackets:
         mid = (start + end) / 2
         fig.add_annotation(
-            x=mid, y=-0.12, xref="x", yref="paper",
+            x=mid, y=-0.22, xref="x", yref="paper",
             text=f"<b>{label}</b>",
             showarrow=False,
-            font=dict(size=11, color=color),
+            font=dict(size=12, color=color),
         )
 
     return fig
